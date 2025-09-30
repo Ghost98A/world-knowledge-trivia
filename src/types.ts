@@ -13,6 +13,7 @@ export interface GameState {
   answered: boolean;
   selectedAnswer: number | null;
   gameStarted: boolean;
+  selectedDifficulty: 'easy' | 'medium' | 'hard' | null;
   lastPlayedAt?: number;
   totalGamesPlayed: number;
   highScore: number;

@@ -18,6 +18,7 @@ export function TriviaGame() {
     answered: false,
     selectedAnswer: null,
     gameStarted: false,
+    selectedDifficulty: null,
     totalGamesPlayed: 0,
     highScore: 0,
   });
@@ -33,11 +34,25 @@ export function TriviaGame() {
     return shuffled;
   };
 
+  const handleDifficultySelect = (difficulty: 'easy' | 'medium' | 'hard') => {
+    setGameState({
+      ...gameState,
+      selectedDifficulty: difficulty,
+    });
+  };
+
   const startGame = () => {
+    if (!gameState.selectedDifficulty) return;
+
     setLoading(true);
 
-    // Shuffle the questions to provide variety
-    const shuffledQuestions = shuffleArray(triviaQuestions);
+    // Filter questions by selected difficulty
+    const filteredQuestions = triviaQuestions.filter(
+      (q) => q.difficulty === gameState.selectedDifficulty
+    );
+
+    // Shuffle the filtered questions to provide variety
+    const shuffledQuestions = shuffleArray(filteredQuestions);
 
     setGameState({
       ...gameState,
@@ -97,6 +112,7 @@ export function TriviaGame() {
       answered: false,
       selectedAnswer: null,
       gameStarted: false,
+      selectedDifficulty: null,
       questions: [],
     });
   };
@@ -113,14 +129,15 @@ export function TriviaGame() {
 
   // Game over screen
   if (gameState.gameStarted && gameState.currentQuestionIndex >= gameState.questions.length) {
-    const percentage = Math.round((gameState.score / QUESTIONS_PER_GAME) * 100);
+    const totalQuestions = gameState.questions.length;
+    const percentage = Math.round((gameState.score / totalQuestions) * 100);
     return (
       <div className="game-over-screen">
         <ThemeToggle />
         <h2>🎉 Game Complete!</h2>
         <div className="score-display">
           <div className="final-score">
-            {gameState.score} / {QUESTIONS_PER_GAME}
+            {gameState.score} / {totalQuestions}
           </div>
           <div className="percentage">{percentage}% Correct</div>
         </div>
@@ -146,7 +163,8 @@ export function TriviaGame() {
   // Game screen
   if (gameState.gameStarted && gameState.questions.length > 0) {
     const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
-    const progress = ((gameState.currentQuestionIndex + 1) / QUESTIONS_PER_GAME) * 100;
+    const totalQuestions = gameState.questions.length;
+    const progress = ((gameState.currentQuestionIndex + 1) / totalQuestions) * 100;
 
     return (
       <div className="game-screen">
@@ -157,7 +175,7 @@ export function TriviaGame() {
           </div>
           <div className="game-info">
             <span className="question-counter">
-              Question {gameState.currentQuestionIndex + 1} of {QUESTIONS_PER_GAME}
+              Question {gameState.currentQuestionIndex + 1} of {totalQuestions}
             </span>
             <span className="score">Score: {gameState.score}</span>
           </div>
@@ -235,11 +253,36 @@ export function TriviaGame() {
         <p className="description">
           Test your knowledge of the world with our curated trivia questions!
         </p>
-        <p className="game-info-text">
-          Each game includes 45 questions: 15 easy, 15 medium, and 15 hard questions.
-        </p>
 
-        <button className="start-button" onClick={startGame} disabled={loading}>
+        <div className="difficulty-selector">
+          <label>Choose Your Difficulty:</label>
+          <div className="difficulty-buttons">
+            <button
+              className={`difficulty-button ${gameState.selectedDifficulty === 'easy' ? 'active' : ''}`}
+              onClick={() => handleDifficultySelect('easy')}
+            >
+              🟢 Easy
+            </button>
+            <button
+              className={`difficulty-button ${gameState.selectedDifficulty === 'medium' ? 'active' : ''}`}
+              onClick={() => handleDifficultySelect('medium')}
+            >
+              🟡 Medium
+            </button>
+            <button
+              className={`difficulty-button ${gameState.selectedDifficulty === 'hard' ? 'active' : ''}`}
+              onClick={() => handleDifficultySelect('hard')}
+            >
+              🔴 Hard
+            </button>
+          </div>
+        </div>
+
+        <button
+          className="start-button"
+          onClick={startGame}
+          disabled={loading || !gameState.selectedDifficulty}
+        >
           Start New Game
         </button>
 
@@ -247,7 +290,7 @@ export function TriviaGame() {
           <div className="stats-summary">
             <div className="stat-item">
               <span className="stat-label">High Score</span>
-              <span className="stat-value">{gameState.highScore}/{QUESTIONS_PER_GAME}</span>
+              <span className="stat-value">{gameState.highScore}</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Games Played</span>
