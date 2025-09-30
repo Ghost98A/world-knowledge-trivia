@@ -1,37 +1,24 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { SubscribeDevProvider, useSubscribeDev } from '@subscribe.dev/react';
+import { SignInScreen } from './components/SignInScreen';
+import { TriviaGame } from './components/TriviaGame';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+function AppContent() {
+  const { isSignedIn, signIn } = useSubscribeDev();
 
-  console.log(import.meta.env)
+  if (!isSignedIn) {
+    return <SignInScreen signIn={signIn} />;
+  }
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  return <TriviaGame />;
 }
 
-export default App
+function App() {
+  return (
+    <SubscribeDevProvider projectToken={import.meta.env.VITE_SUBSCRIBE_DEV_PROJECT_TOKEN}>
+      <AppContent />
+    </SubscribeDevProvider>
+  );
+}
+
+export default App;
