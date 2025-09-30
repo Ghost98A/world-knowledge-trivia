@@ -7,6 +7,12 @@ import { triviaQuestions } from '../data/questions';
 const QUESTIONS_PER_DIFFICULTY = 15;
 const QUESTIONS_PER_GAME = QUESTIONS_PER_DIFFICULTY * 3; // 45 total questions (15 easy, 15 medium, 15 hard)
 
+// Extract unique categories from questions
+const getCategories = (): string[] => {
+  const categories = new Set(triviaQuestions.map((q) => q.category));
+  return ['All Categories', ...Array.from(categories).sort()];
+};
+
 export function TriviaGame() {
   const { usage, subscriptionStatus, subscribe, signOut, useStorage, user } =
     useSubscribeDev();
@@ -19,6 +25,7 @@ export function TriviaGame() {
     selectedAnswer: null,
     gameStarted: false,
     selectedDifficulty: null,
+    selectedCategory: null,
     totalGamesPlayed: 0,
     highScore: 0,
   });
@@ -41,15 +48,29 @@ export function TriviaGame() {
     });
   };
 
+  const handleCategorySelect = (category: string) => {
+    setGameState({
+      ...gameState,
+      selectedCategory: category,
+    });
+  };
+
   const startGame = () => {
     if (!gameState.selectedDifficulty) return;
 
     setLoading(true);
 
     // Filter questions by selected difficulty
-    const filteredQuestions = triviaQuestions.filter(
+    let filteredQuestions = triviaQuestions.filter(
       (q) => q.difficulty === gameState.selectedDifficulty
     );
+
+    // Further filter by category if a specific category is selected
+    if (gameState.selectedCategory && gameState.selectedCategory !== 'All Categories') {
+      filteredQuestions = filteredQuestions.filter(
+        (q) => q.category === gameState.selectedCategory
+      );
+    }
 
     // Shuffle the filtered questions to provide variety
     const shuffledQuestions = shuffleArray(filteredQuestions);
@@ -113,6 +134,7 @@ export function TriviaGame() {
       selectedAnswer: null,
       gameStarted: false,
       selectedDifficulty: null,
+      selectedCategory: null,
       questions: [],
     });
   };
@@ -253,6 +275,21 @@ export function TriviaGame() {
         <p className="description">
           Test your knowledge of the world with our curated trivia questions!
         </p>
+
+        <div className="category-selector">
+          <label>Choose a Category:</label>
+          <div className="category-buttons">
+            {getCategories().map((category) => (
+              <button
+                key={category}
+                className={`category-button ${gameState.selectedCategory === category ? 'active' : ''}`}
+                onClick={() => handleCategorySelect(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="difficulty-selector">
           <label>Choose Your Difficulty:</label>

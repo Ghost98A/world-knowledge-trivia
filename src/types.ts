@@ -14,6 +14,7 @@ export interface GameState {
   selectedAnswer: number | null;
   gameStarted: boolean;
   selectedDifficulty: 'easy' | 'medium' | 'hard' | null;
+  selectedCategory: string | null;
   lastPlayedAt?: number;
   totalGamesPlayed: number;
   highScore: number;
