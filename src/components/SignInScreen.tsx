@@ -1,3 +1,5 @@
+import { ThemeToggle } from './ThemeToggle';
+
 interface SignInScreenProps {
   signIn: () => void;
 }
@@ -5,6 +7,7 @@ interface SignInScreenProps {
 export function SignInScreen({ signIn }: SignInScreenProps) {
   return (
     <div className="sign-in-screen">
+      <ThemeToggle />
       <div className="sign-in-container">
         <h1>🌍 World Knowledge Trivia</h1>
         <p className="subtitle">
