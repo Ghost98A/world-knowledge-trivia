@@ -16,7 +16,8 @@ const triviaQuestionSchema = z.object({
   ),
 });
 
-const QUESTIONS_PER_GAME = 10;
+const QUESTIONS_PER_DIFFICULTY = 15;
+const QUESTIONS_PER_GAME = QUESTIONS_PER_DIFFICULTY * 3; // 45 total questions (15 easy, 15 medium, 15 hard)
 
 export function TriviaGame() {
   const { client, usage, subscriptionStatus, subscribe, signOut, useStorage, user } =
@@ -44,39 +45,54 @@ export function TriviaGame() {
     'Sports and Entertainment',
   ];
 
-  const difficulties: ('easy' | 'medium' | 'hard')[] = ['easy', 'medium', 'hard'];
-  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>(
-    'medium'
-  );
-
   const generateQuestions = async () => {
     if (!client) return;
     setLoading(true);
     setError(null);
 
     try {
-      const { output } = await client.run('openai/gpt-4o', {
-        input: {
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are a trivia game question generator. Generate diverse, interesting, and accurate trivia questions about world knowledge.',
-            },
-            {
-              role: 'user',
-              content: `Generate ${QUESTIONS_PER_GAME} unique trivia questions about world knowledge. Include questions from various categories: ${categories.join(', ')}. Difficulty level: ${selectedDifficulty}. Each question should have 4 options with exactly one correct answer.`,
-            },
-          ],
-        },
-        response_format: triviaQuestionSchema,
-      });
+      // Generate 15 questions for each difficulty level
+      const difficulties: ('easy' | 'medium' | 'hard')[] = ['easy', 'medium', 'hard'];
+      const allQuestions: TriviaQuestion[] = [];
 
-      const parsedOutput = output[0] as { questions: TriviaQuestion[] };
+      for (const difficulty of difficulties) {
+        const { output } = await client.run('openai/gpt-4o', {
+          input: {
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'You are a trivia game question generator. Generate diverse, interesting, and accurate trivia questions about world knowledge. Ensure each question is unique and matches the specified difficulty level.',
+              },
+              {
+                role: 'user',
+                content: `Generate exactly ${QUESTIONS_PER_DIFFICULTY} unique trivia questions about world knowledge. Include questions from various categories: ${categories.join(', ')}.
+
+Difficulty level: ${difficulty}
+
+For ${difficulty} difficulty:
+${difficulty === 'easy' ? '- Use well-known facts and common knowledge\n- Questions should be straightforward with obvious answers\n- Include popular topics and widely recognized information' : ''}
+${difficulty === 'medium' ? '- Use moderately challenging facts\n- Require some specific knowledge but not highly specialized\n- Mix common and less common topics' : ''}
+${difficulty === 'hard' ? '- Use obscure or highly specific facts\n- Require detailed knowledge of the subject\n- Include lesser-known information and complex concepts' : ''}
+
+Each question must:
+1. Have exactly 4 unique options
+2. Have exactly one correct answer
+3. Be different from any previous questions
+4. Match the ${difficulty} difficulty level appropriately`,
+              },
+            ],
+          },
+          response_format: triviaQuestionSchema,
+        });
+
+        const parsedOutput = output[0] as { questions: TriviaQuestion[] };
+        allQuestions.push(...parsedOutput.questions);
+      }
 
       setGameState({
         ...gameState,
-        questions: parsedOutput.questions,
+        questions: allQuestions,
         currentQuestionIndex: 0,
         score: 0,
         answered: false,
@@ -210,7 +226,12 @@ export function TriviaGame() {
         </div>
 
         <div className="question-card">
-          <div className="category-badge">{currentQuestion.category}</div>
+          <div className="badges-container">
+            <div className="category-badge">{currentQuestion.category}</div>
+            <div className={`difficulty-badge ${currentQuestion.difficulty}`}>
+              {currentQuestion.difficulty.charAt(0).toUpperCase() + currentQuestion.difficulty.slice(1)}
+            </div>
+          </div>
           <h2 className="question-text">{currentQuestion.question}</h2>
 
           <div className="options-grid">
@@ -276,21 +297,9 @@ export function TriviaGame() {
         <p className="description">
           Test your knowledge of the world with AI-generated trivia questions!
         </p>
-
-        <div className="difficulty-selector">
-          <label>Select Difficulty:</label>
-          <div className="difficulty-buttons">
-            {difficulties.map((diff) => (
-              <button
-                key={diff}
-                className={`difficulty-button ${selectedDifficulty === diff ? 'active' : ''}`}
-                onClick={() => setSelectedDifficulty(diff)}
-              >
-                {diff.charAt(0).toUpperCase() + diff.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
+        <p className="game-info-text">
+          Each game includes 45 questions: 15 easy, 15 medium, and 15 hard questions.
+        </p>
 
         {error && (
           <div className="error-message">
