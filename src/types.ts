@@ -4,6 +4,7 @@ export interface TriviaQuestion {
   correctAnswer: number;
   category: string;
   difficulty: 'easy' | 'medium' | 'hard';
+  imageUrl?: string;
 }
 
 export interface GameState {

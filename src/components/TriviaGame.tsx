@@ -14,7 +14,7 @@ const getCategories = (): string[] => {
 };
 
 export function TriviaGame() {
-  const { usage, subscriptionStatus, subscribe, signOut, useStorage, user } =
+  const { usage, subscriptionStatus, subscribe, signOut, useStorage, user, client } =
     useSubscribeDev();
 
   const [gameState, setGameState, syncStatus] = useStorage!<GameState>('trivia-game-state', {
@@ -55,38 +55,69 @@ export function TriviaGame() {
     });
   };
 
-  const startGame = () => {
-    if (!gameState.selectedDifficulty) return;
+  const startGame = async () => {
+    if (!gameState.selectedDifficulty || !client) return;
 
     setLoading(true);
 
-    // Filter questions by selected difficulty
-    let filteredQuestions = triviaQuestions.filter(
-      (q) => q.difficulty === gameState.selectedDifficulty
-    );
-
-    // Further filter by category if a specific category is selected
-    if (gameState.selectedCategory && gameState.selectedCategory !== 'All Categories') {
-      filteredQuestions = filteredQuestions.filter(
-        (q) => q.category === gameState.selectedCategory
+    try {
+      // Filter questions by selected difficulty
+      let filteredQuestions = triviaQuestions.filter(
+        (q) => q.difficulty === gameState.selectedDifficulty
       );
+
+      // Further filter by category if a specific category is selected
+      if (gameState.selectedCategory && gameState.selectedCategory !== 'All Categories') {
+        filteredQuestions = filteredQuestions.filter(
+          (q) => q.category === gameState.selectedCategory
+        );
+      }
+
+      // Shuffle the filtered questions to provide variety
+      const shuffledQuestions = shuffleArray(filteredQuestions);
+
+      // Generate images for questions (as hints based on the correct answer)
+      const questionsWithImages = await Promise.all(
+        shuffledQuestions.map(async (question) => {
+          try {
+            const correctAnswerText = question.options[question.correctAnswer];
+            const imagePrompt = `A visual hint for: ${correctAnswerText}. Clear, recognizable, educational illustration style.`;
+
+            const { output } = await client.run('black-forest-labs/flux-schnell', {
+              input: {
+                prompt: imagePrompt,
+                width: 512,
+                height: 512,
+              },
+            });
+
+            return {
+              ...question,
+              imageUrl: output[0] as string,
+            };
+          } catch (error) {
+            console.error('Failed to generate image for question:', error);
+            // Return question without image if generation fails
+            return question;
+          }
+        })
+      );
+
+      setGameState({
+        ...gameState,
+        questions: questionsWithImages,
+        currentQuestionIndex: 0,
+        score: 0,
+        answered: false,
+        selectedAnswer: null,
+        gameStarted: true,
+        lastPlayedAt: Date.now(),
+      });
+    } catch (error) {
+      console.error('Failed to start game:', error);
+    } finally {
+      setLoading(false);
     }
-
-    // Shuffle the filtered questions to provide variety
-    const shuffledQuestions = shuffleArray(filteredQuestions);
-
-    setGameState({
-      ...gameState,
-      questions: shuffledQuestions,
-      currentQuestionIndex: 0,
-      score: 0,
-      answered: false,
-      selectedAnswer: null,
-      gameStarted: true,
-      lastPlayedAt: Date.now(),
-    });
-
-    setLoading(false);
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
@@ -158,7 +189,8 @@ export function TriviaGame() {
       <div className="loading-screen">
         <ThemeToggle />
         <div className="spinner"></div>
-        <p>Loading trivia questions...</p>
+        <p>Generating your trivia questions with AI image hints...</p>
+        <p className="loading-subtext">This may take a moment</p>
       </div>
     );
   }
@@ -228,6 +260,17 @@ export function TriviaGame() {
             </div>
           </div>
           <h2 className="question-text">{currentQuestion.question}</h2>
+
+          {currentQuestion.imageUrl && (
+            <div className="question-image-container">
+              <img
+                src={currentQuestion.imageUrl}
+                alt="Visual hint"
+                className="question-image"
+              />
+              <p className="image-hint-label">💡 Visual Hint</p>
+            </div>
+          )}
 
           <div className="options-grid">
             {currentQuestion.options.map((option, index) => {
