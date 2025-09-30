@@ -1,11 +1,11 @@
 Please implement the following feature request:
 
-**Feature Request:** Add more questions to each categories and difficulties
+**Feature Request:** Ensure the image or emoji for the hint is generating properly and is visible
 
 **Project Context:**
 - Repository: Ghost98A/world-knowledge-trivia
-- Branch: feat/add-more-questions-to-each-categories-an
-- Base Branch: feat/add-an-image-to-each-question-however-it
+- Branch: feat/ensure-the-image-or-emoji-for-the-hint-i
+- Base Branch: feat/add-more-questions-to-each-categories-an
 - Requested by: Ghost98A
 
 **CRITICAL - Read Project Instructions First:**

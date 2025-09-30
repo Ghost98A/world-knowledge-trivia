@@ -31,6 +31,11 @@ export function TriviaGame() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [imageGenerationStatus, setImageGenerationStatus] = useState<{
+    total: number;
+    completed: number;
+    failed: number;
+  }>({ total: 0, completed: 0, failed: 0 });
 
   const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
@@ -76,12 +81,19 @@ export function TriviaGame() {
       // Shuffle the filtered questions to provide variety
       const shuffledQuestions = shuffleArray(filteredQuestions);
 
+      // Initialize image generation status
+      setImageGenerationStatus({
+        total: shuffledQuestions.length,
+        completed: 0,
+        failed: 0,
+      });
+
       // Generate images for questions (as hints based on the correct answer)
       const questionsWithImages = await Promise.all(
-        shuffledQuestions.map(async (question) => {
+        shuffledQuestions.map(async (question, index) => {
           try {
             const correctAnswerText = question.options[question.correctAnswer];
-            const imagePrompt = `A visual hint for: ${correctAnswerText}. Clear, recognizable, educational illustration style.`;
+            const imagePrompt = `A high-quality visual representation of ${correctAnswerText}. Photorealistic, clear, detailed, professional photography style, no text.`;
 
             const { output } = await client.run('black-forest-labs/flux-schnell', {
               input: {
@@ -91,12 +103,29 @@ export function TriviaGame() {
               },
             });
 
+            // Update progress
+            setImageGenerationStatus(prev => ({
+              ...prev,
+              completed: prev.completed + 1,
+            }));
+
+            const imageUrl = output[0] as string;
+            console.log(`✅ Image generated for question ${index + 1}: ${question.question.substring(0, 50)}...`);
+
             return {
               ...question,
-              imageUrl: output[0] as string,
+              imageUrl,
             };
           } catch (error) {
-            console.error('Failed to generate image for question:', error);
+            console.error(`❌ Failed to generate image for question ${index + 1}:`, error);
+
+            // Update failure count
+            setImageGenerationStatus(prev => ({
+              ...prev,
+              completed: prev.completed + 1,
+              failed: prev.failed + 1,
+            }));
+
             // Return question without image if generation fails
             return question;
           }
@@ -185,11 +214,31 @@ export function TriviaGame() {
   };
 
   if (loading) {
+    const progress = imageGenerationStatus.total > 0
+      ? Math.round((imageGenerationStatus.completed / imageGenerationStatus.total) * 100)
+      : 0;
+
     return (
       <div className="loading-screen">
         <ThemeToggle />
         <div className="spinner"></div>
         <p>Generating your trivia questions with AI image hints...</p>
+        {imageGenerationStatus.total > 0 && (
+          <>
+            <div className="generation-progress">
+              <div className="progress-bar-loading">
+                <div
+                  className="progress-fill-loading"
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+              <p className="loading-subtext">
+                {imageGenerationStatus.completed} of {imageGenerationStatus.total} images generated
+                {imageGenerationStatus.failed > 0 && ` (${imageGenerationStatus.failed} failed)`}
+              </p>
+            </div>
+          </>
+        )}
         <p className="loading-subtext">This may take a moment</p>
       </div>
     );
@@ -261,14 +310,28 @@ export function TriviaGame() {
           </div>
           <h2 className="question-text">{currentQuestion.question}</h2>
 
-          {currentQuestion.imageUrl && (
+          {currentQuestion.imageUrl ? (
             <div className="question-image-container">
               <img
                 src={currentQuestion.imageUrl}
-                alt="Visual hint"
+                alt="Visual hint for the answer"
                 className="question-image"
+                onError={(e) => {
+                  console.error('Image failed to load:', currentQuestion.imageUrl);
+                  e.currentTarget.style.display = 'none';
+                }}
+                onLoad={() => {
+                  console.log('✅ Image loaded successfully');
+                }}
               />
               <p className="image-hint-label">💡 Visual Hint</p>
+            </div>
+          ) : (
+            <div className="question-image-container no-image">
+              <div className="image-placeholder">
+                <span className="placeholder-icon">🖼️</span>
+                <p className="placeholder-text">Visual hint unavailable</p>
+              </div>
             </div>
           )}
 
