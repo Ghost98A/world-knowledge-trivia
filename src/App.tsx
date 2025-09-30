@@ -1,4 +1,5 @@
 import { SubscribeDevProvider, useSubscribeDev } from '@subscribe.dev/react';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { SignInScreen } from './components/SignInScreen';
 import { TriviaGame } from './components/TriviaGame';
 import './App.css';
@@ -16,7 +17,9 @@ function AppContent() {
 function App() {
   return (
     <SubscribeDevProvider projectToken={import.meta.env.VITE_SUBSCRIBE_DEV_PROJECT_TOKEN}>
-      <AppContent />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </SubscribeDevProvider>
   );
 }

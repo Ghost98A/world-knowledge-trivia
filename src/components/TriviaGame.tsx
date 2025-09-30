@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSubscribeDev } from '@subscribe.dev/react';
 import { z } from 'zod';
+import { ThemeToggle } from './ThemeToggle';
 import type { TriviaQuestion, GameState } from '../types';
 
 const triviaQuestionSchema = z.object({
@@ -149,6 +150,7 @@ export function TriviaGame() {
   if (loading) {
     return (
       <div className="loading-screen">
+        <ThemeToggle />
         <div className="spinner"></div>
         <p>Generating trivia questions...</p>
       </div>
@@ -160,6 +162,7 @@ export function TriviaGame() {
     const percentage = Math.round((gameState.score / QUESTIONS_PER_GAME) * 100);
     return (
       <div className="game-over-screen">
+        <ThemeToggle />
         <h2>🎉 Game Complete!</h2>
         <div className="score-display">
           <div className="final-score">
@@ -193,6 +196,7 @@ export function TriviaGame() {
 
     return (
       <div className="game-screen">
+        <ThemeToggle />
         <div className="game-header">
           <div className="progress-bar">
             <div className="progress-fill" style={{ width: `${progress}%` }}></div>
@@ -257,6 +261,7 @@ export function TriviaGame() {
   // Start screen
   return (
     <div className="start-screen">
+      <ThemeToggle />
       <div className="header">
         <div className="user-info">
           <span className="user-email">{user?.email}</span>
