@@ -1,11 +1,11 @@
 Please implement the following feature request:
 
-**Feature Request:** Initial app implementation: Create a world knowledge trivia game app
+**Feature Request:** ensure the app is full screen
 
 **Project Context:**
 - Repository: Ghost98A/world-knowledge-trivia
-- Branch: feat/initial-implementation
-- Base Branch: main
+- Branch: feat/ensure-the-app-is-full-screen
+- Base Branch: feat/initial-implementation
 - Requested by: Ghost98A
 
 **CRITICAL - Read Project Instructions First:**
