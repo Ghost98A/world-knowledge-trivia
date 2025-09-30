@@ -1,26 +1,14 @@
 import { useState } from 'react';
 import { useSubscribeDev } from '@subscribe.dev/react';
-import { z } from 'zod';
 import { ThemeToggle } from './ThemeToggle';
 import type { TriviaQuestion, GameState } from '../types';
-
-const triviaQuestionSchema = z.object({
-  questions: z.array(
-    z.object({
-      question: z.string(),
-      options: z.array(z.string()).length(4),
-      correctAnswer: z.number().min(0).max(3),
-      category: z.string(),
-      difficulty: z.enum(['easy', 'medium', 'hard']),
-    })
-  ),
-});
+import { triviaQuestions } from '../data/questions';
 
 const QUESTIONS_PER_DIFFICULTY = 15;
 const QUESTIONS_PER_GAME = QUESTIONS_PER_DIFFICULTY * 3; // 45 total questions (15 easy, 15 medium, 15 hard)
 
 export function TriviaGame() {
-  const { client, usage, subscriptionStatus, subscribe, signOut, useStorage, user } =
+  const { usage, subscriptionStatus, subscribe, signOut, useStorage, user } =
     useSubscribeDev();
 
   const [gameState, setGameState, syncStatus] = useStorage!<GameState>('trivia-game-state', {
@@ -35,84 +23,34 @@ export function TriviaGame() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const categories = [
-    'World Geography',
-    'World History',
-    'Science and Technology',
-    'Arts and Culture',
-    'Sports and Entertainment',
-  ];
-
-  const generateQuestions = async () => {
-    if (!client) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Generate 15 questions for each difficulty level
-      const difficulties: ('easy' | 'medium' | 'hard')[] = ['easy', 'medium', 'hard'];
-      const allQuestions: TriviaQuestion[] = [];
-
-      for (const difficulty of difficulties) {
-        const { output } = await client.run('openai/gpt-4o', {
-          input: {
-            messages: [
-              {
-                role: 'system',
-                content:
-                  'You are a trivia game question generator. Generate diverse, interesting, and accurate trivia questions about world knowledge. Ensure each question is unique and matches the specified difficulty level.',
-              },
-              {
-                role: 'user',
-                content: `Generate exactly ${QUESTIONS_PER_DIFFICULTY} unique trivia questions about world knowledge. Include questions from various categories: ${categories.join(', ')}.
-
-Difficulty level: ${difficulty}
-
-For ${difficulty} difficulty:
-${difficulty === 'easy' ? '- Use well-known facts and common knowledge\n- Questions should be straightforward with obvious answers\n- Include popular topics and widely recognized information' : ''}
-${difficulty === 'medium' ? '- Use moderately challenging facts\n- Require some specific knowledge but not highly specialized\n- Mix common and less common topics' : ''}
-${difficulty === 'hard' ? '- Use obscure or highly specific facts\n- Require detailed knowledge of the subject\n- Include lesser-known information and complex concepts' : ''}
-
-Each question must:
-1. Have exactly 4 unique options
-2. Have exactly one correct answer
-3. Be different from any previous questions
-4. Match the ${difficulty} difficulty level appropriately`,
-              },
-            ],
-          },
-          response_format: triviaQuestionSchema,
-        });
-
-        const parsedOutput = output[0] as { questions: TriviaQuestion[] };
-        allQuestions.push(...parsedOutput.questions);
-      }
-
-      setGameState({
-        ...gameState,
-        questions: allQuestions,
-        currentQuestionIndex: 0,
-        score: 0,
-        answered: false,
-        selectedAnswer: null,
-        gameStarted: true,
-        lastPlayedAt: Date.now(),
-      });
-    } catch (err: any) {
-      if (err.type === 'insufficient_credits') {
-        setError('Insufficient credits. Please upgrade your plan to continue playing.');
-      } else if (err.type === 'rate_limit_exceeded') {
-        const retryAfterSeconds = Math.ceil((err.retryAfter || 0) / 1000);
-        setError(`Rate limit exceeded. Please try again in ${retryAfterSeconds} seconds.`);
-      } else {
-        setError('Failed to generate questions. Please try again.');
-        console.error('Generation failed:', err);
-      }
-    } finally {
-      setLoading(false);
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
+    return shuffled;
+  };
+
+  const startGame = () => {
+    setLoading(true);
+
+    // Shuffle the questions to provide variety
+    const shuffledQuestions = shuffleArray(triviaQuestions);
+
+    setGameState({
+      ...gameState,
+      questions: shuffledQuestions,
+      currentQuestionIndex: 0,
+      score: 0,
+      answered: false,
+      selectedAnswer: null,
+      gameStarted: true,
+      lastPlayedAt: Date.now(),
+    });
+
+    setLoading(false);
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
@@ -168,7 +106,7 @@ Each question must:
       <div className="loading-screen">
         <ThemeToggle />
         <div className="spinner"></div>
-        <p>Generating trivia questions...</p>
+        <p>Loading trivia questions...</p>
       </div>
     );
   }
@@ -295,24 +233,13 @@ Each question must:
       <div className="welcome-section">
         <h1>🌍 World Knowledge Trivia</h1>
         <p className="description">
-          Test your knowledge of the world with AI-generated trivia questions!
+          Test your knowledge of the world with our curated trivia questions!
         </p>
         <p className="game-info-text">
           Each game includes 45 questions: 15 easy, 15 medium, and 15 hard questions.
         </p>
 
-        {error && (
-          <div className="error-message">
-            {error}
-            {error.includes('credits') && (
-              <button className="upgrade-button" onClick={subscribe!}>
-                Upgrade Plan
-              </button>
-            )}
-          </div>
-        )}
-
-        <button className="start-button" onClick={generateQuestions} disabled={loading}>
+        <button className="start-button" onClick={startGame} disabled={loading}>
           Start New Game
         </button>
 
