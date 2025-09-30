@@ -1,0 +1,77 @@
+Please implement the following feature request:
+
+**Feature Request:** Initial app implementation: Create a world knowledge trivia game app
+
+**Project Context:**
+- Repository: Ghost98A/world-knowledge-trivia
+- Branch: feat/initial-implementation
+- Base Branch: main
+- Requested by: Ghost98A
+
+**CRITICAL - Read Project Instructions First:**
+1. Check if there is a CLAUDE.md file in the repository root
+2. If CLAUDE.md exists, READ IT FIRST and follow ALL guidelines specified there
+3. The CLAUDE.md file contains critical project-specific instructions, architecture details, and conventions
+4. All implementation decisions should follow the patterns and guidelines in CLAUDE.md
+
+**Implementation Steps:**
+1. Read CLAUDE.md if it exists (this is mandatory!)
+2. Analyze the existing codebase structure and patterns (check existing components, styling approach, state management)
+3. Implement the feature following the project's conventions from CLAUDE.md
+4. If you need to add dependencies, update package.json accordingly
+5. Ensure the code compiles and follows best practices
+6. Make minimal, focused changes that accomplish the feature request
+
+**Frontend/UI Implementation Best Practices:**
+When implementing UI features, pages, or components:
+
+- **Layout & Spacing:**
+  - Use fullscreen layouts when appropriate (min-h-screen, w-full, h-full)
+  - Implement proper responsive design with mobile-first approach
+  - Use consistent spacing (padding, margin) following the project's design system
+  - Utilize flexbox/grid for layouts (flex, grid, gap utilities)
+
+- **Styling & Visual Design:**
+  - Follow the existing styling approach (CSS Modules, Tailwind, styled-components, etc.)
+  - Maintain consistent color palette and theming from existing components
+  - Add smooth transitions and hover states for interactive elements
+  - Ensure proper contrast ratios for accessibility (WCAG AA minimum)
+  - Use semantic color names (primary, secondary, accent, etc.)
+
+- **Component Architecture:**
+  - Create reusable, composable components
+  - Separate presentation from business logic
+  - Use TypeScript interfaces for all component props
+  - Implement proper loading states, error boundaries, and empty states
+  - Follow existing file structure and naming conventions
+
+- **User Experience:**
+  - Add loading spinners or skeletons for async operations
+  - Implement proper error handling with user-friendly messages
+  - Provide visual feedback for user actions (button states, form validation)
+  - Ensure keyboard navigation and focus management
+  - Add appropriate aria-labels for accessibility
+
+- **Modern UI Patterns:**
+  - Use CSS Grid/Flexbox for complex layouts
+  - Implement proper z-index layering for modals, dropdowns, tooltips
+  - Add smooth animations (transform, opacity) not layout shifts
+  - Use CSS variables for theming support
+  - Implement dark mode support if the project has it
+
+- **Performance:**
+  - Lazy load components when appropriate
+  - Optimize images (proper formats, sizes, lazy loading)
+  - Avoid unnecessary re-renders (useMemo, useCallback, React.memo)
+  - Use code splitting for large features
+
+**Important Quality Checks:**
+- CLAUDE.md is your primary source of truth for this project
+- Always assume environment variables are available, and never leave situations where env vars are needed as mocked or TODO or placeholders. Environment variables are always there.
+- Ensure all changes are production-ready and fully functional
+- Test edge cases and error scenarios
+- Verify responsive behavior across screen sizes
+- Do not make unnecessary changes outside the feature scope
+- Match the quality and style of existing components
+
+Start by reading CLAUDE.md (if present), then implement the feature with professional-grade UI/UX.
