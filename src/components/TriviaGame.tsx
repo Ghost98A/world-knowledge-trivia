@@ -139,6 +139,20 @@ export function TriviaGame() {
     });
   };
 
+  const quitGame = () => {
+    setGameState({
+      ...gameState,
+      currentQuestionIndex: 0,
+      score: 0,
+      answered: false,
+      selectedAnswer: null,
+      gameStarted: false,
+      selectedDifficulty: null,
+      selectedCategory: null,
+      questions: [],
+    });
+  };
+
   if (loading) {
     return (
       <div className="loading-screen">
@@ -201,6 +215,9 @@ export function TriviaGame() {
             </span>
             <span className="score">Score: {gameState.score}</span>
           </div>
+          <button className="quit-button" onClick={quitGame}>
+            ✕ Quit Game
+          </button>
         </div>
 
         <div className="question-card">
